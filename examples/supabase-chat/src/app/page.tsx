@@ -1,6 +1,6 @@
 "use client";
 
-import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { createDatabaseClient } from "@/lib/dbClient/browser";
 import {
   AgentInterface,
   fetchLLM,
@@ -8,7 +8,7 @@ import {
   openAIMessageFormat,
   restStorage,
 } from "@openuidev/react-ui";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel } from '@lumina/db-shim'  // Migrated from dbClient;
 import { useEffect, useMemo, useState } from "react";
 
 export default function Page() {
@@ -17,7 +17,7 @@ export default function Page() {
   // another tab so the sidebar stays in sync without a full page reload.
   const [threadListKey, setThreadListKey] = useState(0);
 
-  // Thread persistence stays server-backed (Supabase) via the same /api/threads
+  // Thread persistence stays server-backed (dbClient) via the same /api/threads
   // REST contract the legacy `threadApiUrl` used — restStorage reproduces those
   // conventions and keeps loadThread deserialization aligned with OpenAI format.
   const storage = useMemo(
@@ -38,7 +38,7 @@ export default function Page() {
   );
 
   useEffect(() => {
-    const supabase = createSupabaseBrowser();
+    const dbClient = createDatabaseClient();
     let channel: RealtimeChannel | undefined;
 
     const init = async () => {
@@ -47,15 +47,15 @@ export default function Page() {
       // and is used to scope threads via Row Level Security.
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await dbClient.auth.getSession();
       if (!session) {
-        await supabase.auth.signInAnonymously();
+        await dbClient.auth.signInAnonymously();
       }
 
       // Subscribe to Realtime changes on the threads table.
       // This fires whenever any thread is created, updated, or deleted —
       // including from another tab or device logged in with the same account.
-      channel = supabase
+      channel = dbClient
         .channel("threads-realtime")
         .on("postgres_changes", { event: "*", schema: "public", table: "threads" }, () => {
           // Remount ChatProvider so the thread sidebar refreshes.
@@ -75,7 +75,7 @@ export default function Page() {
 
   return (
     <div className="h-screen w-screen overflow-hidden">
-      <AgentInterface key={threadListKey} storage={storage} llm={llm} agentName="Supabase Chat" />
+      <AgentInterface key={threadListKey} storage={storage} llm={llm} agentName="dbClient Chat" />
     </div>
   );
 }

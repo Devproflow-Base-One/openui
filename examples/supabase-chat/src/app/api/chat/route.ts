@@ -1,4 +1,4 @@
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createDatabaseClient } from "@/lib/dbClient/server";
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions.mjs";
@@ -10,7 +10,7 @@ const MODEL = process.env.OPENROUTER_MODEL ?? "openai/gpt-5.5";
  *
  * Accepts an OpenAI-format message array and an optional threadId.
  * Streams the assistant reply as Server-Sent Events (openai-completions format).
- * After the stream finishes, persists the full conversation to Supabase so
+ * After the stream finishes, persists the full conversation to dbClient so
  * that loadThread can restore it when the user reopens the thread.
  */
 export async function POST(req: NextRequest) {
@@ -19,9 +19,9 @@ export async function POST(req: NextRequest) {
     threadId?: string | null;
   };
 
-  // Create the Supabase client before streaming so the request context
+  // Create the dbClient client before streaming so the request context
   // (cookies) is still available when we persist messages afterwards.
-  const supabase = await createSupabaseServer();
+  const dbClient = await createDatabaseClient();
 
   const client = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
@@ -69,9 +69,9 @@ export async function POST(req: NextRequest) {
             { role: "assistant", content: assistantContent },
           ];
 
-          await supabase.from("messages").delete().eq("thread_id", threadId);
+          await dbClient.from("messages").delete().eq("thread_id", threadId);
 
-          await supabase.from("messages").insert(
+          await dbClient.from("messages").insert(
             allMessages.map((m) => ({
               thread_id: threadId,
               role: m.role,

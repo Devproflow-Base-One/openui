@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Minimal middleware that passes requests through.
- * Auth/session handling has been removed during the Supabase to Lumina migration.
+ * Auth/session handling has been removed during the dbClient to Lumina migration.
  */
 export async function middleware(request: NextRequest) {
   return NextResponse.next({ request });

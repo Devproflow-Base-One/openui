@@ -1,4 +1,4 @@
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createDatabaseClient } from "@/lib/dbClient/server";
 
 /**
  * DELETE /api/threads/delete/:id
@@ -11,17 +11,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const supabase = await createSupabaseServer();
+  const dbClient = await createDatabaseClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await dbClient.auth.getUser();
 
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { error } = await supabase
+  const { error } = await dbClient
     .from("threads")
     .delete()
     .eq("id", id)

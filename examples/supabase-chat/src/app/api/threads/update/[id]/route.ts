@@ -1,4 +1,4 @@
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createDatabaseClient } from "@/lib/dbClient/server";
 import { NextRequest } from "next/server";
 
 /**
@@ -15,16 +15,16 @@ export async function PATCH(
   const { id } = await params;
   const body = (await req.json()) as { title?: string };
 
-  const supabase = await createSupabaseServer();
+  const dbClient = await createDatabaseClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await dbClient.auth.getUser();
 
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await dbClient
     .from("threads")
     .update({ title: body.title })
     .eq("id", id)

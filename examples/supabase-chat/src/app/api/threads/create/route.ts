@@ -1,4 +1,4 @@
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createDatabaseClient } from "@/lib/dbClient/server";
 import { NextRequest } from "next/server";
 
 /**
@@ -17,10 +17,10 @@ export async function POST(req: NextRequest) {
     messages: Array<{ role: string; content: unknown }>;
   };
 
-  const supabase = await createSupabaseServer();
+  const dbClient = await createDatabaseClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await dbClient.auth.getUser();
 
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       ? rawContent.trim().slice(0, 60)
       : "New Chat";
 
-  const { data: thread, error } = await supabase
+  const { data: thread, error } = await dbClient
     .from("threads")
     .insert({ user_id: user.id, title })
     .select()

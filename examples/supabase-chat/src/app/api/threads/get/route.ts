@@ -1,4 +1,4 @@
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createDatabaseClient } from "@/lib/dbClient/server";
 
 /**
  * GET /api/threads/get
@@ -7,17 +7,17 @@ import { createSupabaseServer } from "@/lib/supabase/server";
  * Response shape: { threads: Thread[], nextCursor?: any }
  */
 export async function GET() {
-  const supabase = await createSupabaseServer();
+  const dbClient = await createDatabaseClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await dbClient.auth.getUser();
 
   if (!user) {
     // Not yet authenticated — return an empty list so the sidebar renders cleanly.
     return Response.json({ threads: [] });
   }
 
-  const { data: threads, error } = await supabase
+  const { data: threads, error } = await dbClient
     .from("threads")
     .select("id, title, created_at")
     .eq("user_id", user.id)

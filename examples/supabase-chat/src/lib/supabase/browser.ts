@@ -1,12 +1,9 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@lumina/db-shim";
 
 /**
- * Returns a Supabase client suitable for use in Client Components.
- * Reads the session from browser cookies / localStorage automatically.
+ * Returns a Lumina database client suitable for use in Client Components.
  */
-export function createSupabaseBrowser() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+export function createDatabaseClient() {
+  const connectionString = process.env.NEXT_PUBLIC_DATABASE_URL || "";
+  return createClient(connectionString, "");
 }

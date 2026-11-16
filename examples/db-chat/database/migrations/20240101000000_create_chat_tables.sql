@@ -1,5 +1,5 @@
 -- ============================================================
--- OpenUI × Supabase Chat — initial schema
+-- OpenUI × DB Chat — initial schema
 -- ============================================================
 
 -- ── Tables ──────────────────────────────────────────────────
@@ -103,8 +103,14 @@ CREATE POLICY "messages: delete via own thread"
     )
   );
 
--- ── Realtime ─────────────────────────────────────────────────
--- Allows the client-side Supabase Realtime subscription in page.tsx
--- to receive postgres_changes events for the threads table.
+-- ── Realtime (optional) ──────────────────────────────────────
+-- On hosted pg variants that ship a realtime publication, add the
+-- threads table so client-side subscriptions can receive change
+-- events. Skipped silently on plain PostgreSQL.
 
-ALTER PUBLICATION supabase_realtime ADD TABLE threads;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE threads;
+  END IF;
+END $$;
